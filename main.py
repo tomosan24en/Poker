@@ -58,6 +58,17 @@ class App:
             self.cursor = min(4, self.cursor + 1)
         if pyxel.btnp(pyxel.KEY_SPACE):
             self.change[self.cursor] = not self.change[self.cursor]
+        if pyxel.btnp(pyxel.KEY_R):
+            change_indexes = []
+            for i, card in enumerate(self.dealt_cards):
+                if self.change[i]:
+                    change_indexes.append(i)
+                    self.deck.append(card)
+            
+            for i in change_indexes:
+                self.dealt_cards[i] = self.deck.random_pick(1)[0]
+            
+            self.change = [False for _ in range(5)]
 
     def draw(self) -> None:
         self._draw_background()

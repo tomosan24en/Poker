@@ -208,13 +208,25 @@ class Deck:
         for ncs in _NUMBER_CARDS.values():
             for nc in ncs:
                 cards.append(nc)
-        self.cards = cards
+        self._cards = cards
 
     def random_pick(self, count: int) -> list[Card]:
-        if len(self.cards) < count:
+        if len(self._cards) < count:
             raise ValueError("Not enough cards")
         res = []
         for _ in range(count):
-            i = random.randrange(len(self.cards))
-            res.append(self.cards.pop(i))
+            i = random.randrange(len(self._cards))
+            res.append(self._cards.pop(i))
         return res
+    
+    def append(self, card: Card) -> None:
+        self._cards.append(card)
+
+    def extend(self, cards: list[Card]) -> None:
+        self._cards.extend(cards)
+
+    def combine(self, deck: 'Deck') -> None:
+        self.extend(deck._cards)
+
+    def pop(self, index: int) -> Card:
+        return self._cards.pop(index)
