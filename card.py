@@ -32,6 +32,7 @@ class Number(Enum):
         self.num = num
         self.str_name = str_name
         self.index = self.num - 1
+        self.strength_A = (self.num + 11) % 13
 
 
 class Card(metaclass=ABCMeta):
@@ -79,6 +80,13 @@ class _NumberCard(Card):
     def __str__(self) -> str:
         return f"{self.suit.str_name}-{self.number.str_name}"
     
+
+def print_card_list(cards: list[Card]) -> None:
+    for card in cards:
+        print(f"| {card} ", end="")
+    print("|")
+    
+
 JOKER = _Joker()
 HEART_A = _NumberCard(Suit.HEART, Number.A)
 HEART_2 = _NumberCard(Suit.HEART, Number.N_2)
