@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum
+import random
 
 
 class Suit(Enum):
@@ -30,6 +31,7 @@ class Number(Enum):
     def __init__(self, num: int, str_name: str) -> None:
         self.num = num
         self.str_name = str_name
+        self.index = self.num - 1
 
 
 class Card(metaclass=ABCMeta):
@@ -195,13 +197,24 @@ _NUMBER_CARDS = {
 }
 
 def get_card(suit: Suit, number: Number) -> Card:
-    return _NUMBER_CARDS[suit][number.num - 1]
+    return _NUMBER_CARDS[suit][number.index]
 
-def create_deck(jokers: int = 1) -> list[Card]:
-    res: list[Card] = []
-    for _ in range(jokers):
-        res.append(JOKER)
-    for ncs in _NUMBER_CARDS.values():
-        for nc in ncs:
-            res.append(nc)
-    return res
+
+class Deck:
+    def __init__(self, jokers: int = 1) -> None:
+        cards: list[Card] = []
+        for _ in range(jokers):
+            cards.append(JOKER)
+        for ncs in _NUMBER_CARDS.values():
+            for nc in ncs:
+                cards.append(nc)
+        self.cards = cards
+
+    def random_pick(self, count: int) -> list[Card]:
+        if len(self.cards) < count:
+            raise ValueError("Not enough cards")
+        res = []
+        for _ in range(count):
+            i = random.randrange(len(self.cards))
+            res.append(self.cards.pop(i))
+        return res
