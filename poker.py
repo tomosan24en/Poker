@@ -9,14 +9,23 @@ class DealtCards:
         self.cards = cards
         self._jokers = sum(1 if card.is_joker() else 0 for card in self.cards)
 
-        grouping: dict[Number, list[Card]] = {}
         cards_except_joker = [card for card in self.cards if not card.is_joker()]
+
+        grouping_number: dict[Number, list[Card]] = {}
         for i, card in enumerate(cards_except_joker):
-            if card.get_number() in grouping.keys():
-                grouping[card.get_number()].append(card)
+            if card.get_number() in grouping_number.keys():
+                grouping_number[card.get_number()].append(card)
             else:
-                grouping[card.get_number()] = [card]
-        self._grouping = grouping
+                grouping_number[card.get_number()] = [card]
+        self._grouping_number = grouping_number
+
+        grouping_suit: dict[Suit, list[Card]] = {}
+        for i, card in enumerate(cards_except_joker):
+            if card.get_suit() in grouping_suit.keys():
+                grouping_suit[card.get_suit()].append(card)
+            else:
+                grouping_suit[card.get_suit()] = [card]
+        self._grouping_suit = grouping_suit
 
     def contains_joker(self) -> int:
         return self._jokers >= 1
@@ -25,16 +34,19 @@ class DealtCards:
         return self._jokers
 
     def group_by_number(self) -> dict[Number, list[Card]]:
-        return self._grouping
+        return self._grouping_number
     
     def count_distinct_numbers(self) -> int:
-        return len(self._grouping.keys())
+        return len(self._grouping_number.keys())
 
-    def count_groups(self, above: int) -> int:
+    def count_number_groups(self, above: int) -> int:
         return sum(
             1 if len(number_card_list) >= above else 0
-            for number_card_list in self._grouping.values()
+            for number_card_list in self._grouping_number.values()
         )
+    
+    def count_distinct_suits(self) -> int:
+        return len(self._grouping_suit.keys())
 
 
 class Hand(metaclass=ABCMeta):
@@ -54,7 +66,7 @@ class _OnePair(Hand):
     def check(self, cards: DealtCards) -> bool:
         if cards.contains_joker():
             return True
-        return cards.count_groups(2) >= 1
+        return cards.count_number_groups(2) >= 1
         
 
 class _TwoPairs(Hand):
@@ -66,9 +78,9 @@ class _TwoPairs(Hand):
         if jokers >= 2:
             return True
         if jokers == 1:
-            return cards.count_distinct_numbers() >= 2 and cards.count_groups(2) >= 1
+            return cards.count_distinct_numbers() >= 2 and cards.count_number_groups(2) >= 1
         else:
-            return cards.count_groups(2) >= 2
+            return cards.count_number_groups(2) >= 2
         
 
 class _ThreeCards(Hand):
@@ -79,7 +91,7 @@ class _ThreeCards(Hand):
         jokers = cards.count_joker()
         if jokers >= 2:
             return True
-        return cards.count_groups(3 - jokers) >= 1
+        return cards.count_number_groups(3 - jokers) >= 1
     
 
 class _FullHouse(Hand):
@@ -95,20 +107,55 @@ class _FullHouse(Hand):
         if jokers == 1:
             return cards.count_distinct_numbers() == 2
         else:
-            return cards.count_distinct_numbers() == 2 and cards.count_groups(2) == 2
+            return cards.count_distinct_numbers() == 2 and cards.count_number_groups(2) == 2
 
+
+class _FourCards(Hand):
+    def __init__(self) -> None:
+        super().__init__("フォーカード", "同じ数字のカードが4枚")
+
+    def check(self, cards: DealtCards) -> bool:
+        jokers = cards.count_joker()
+        if jokers >= 3:
+            return True
+        return cards.count_number_groups(4 - jokers) >= 1
+    
+
+class _FiveCards(Hand):
+    def __init__(self) -> None:
+        super().__init__("ファイブカード", "同じ数字のカードが5枚")
+
+    def check(self, cards: DealtCards) -> bool:
+        jokers = cards.count_joker()
+        if jokers >= 4:
+            return True
+        return cards.count_number_groups(5 - jokers) >= 1
+    
+
+class _Flush(Hand):
+    def __init__(self) -> None:
+        super().__init__("フラッシュ", "同じマークのカードが5枚")
+
+    def check(self, cards: DealtCards) -> bool:
+        return cards.count_distinct_suits() == 1
     
 
 ONE_PAIR = _OnePair()
 TWO_PAIRS = _TwoPairs()
 THREE_CARDS = _ThreeCards()
 FULL_HOUSE = _FullHouse()
+FOUR_CARDS = _FourCards()
+FIVE_CARDS = _FiveCards()
+FLUSH = _Flush()
 
 HANDS: list[Hand] = [
     ONE_PAIR,
     TWO_PAIRS,
     THREE_CARDS,
     FULL_HOUSE,
+    FOUR_CARDS,
+    FIVE_CARDS,
+    FLUSH,
 ]
 
 for _ in range(10):
@@ -117,3 +164,7 @@ for _ in range(10):
     for hand in HANDS:
         print(hand.name, hand.check(d))
     print("")
+
+
+d = DealtCards([CLUB_10, CLUB_2, CLUB_4, CLUB_6, JOKER])
+print(FLUSH.check(d))
