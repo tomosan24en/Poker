@@ -26,6 +26,10 @@ def draw_card_back(x: float, y: float) -> None:
     pyxel.blt(x, y, 0, 16, 32, 16, 24, colkey=pyxel.COLOR_BLACK)
 
 
+def draw_change_mark(x: float, y: float) -> None:
+    pyxel.blt(x, y, 0, 32, 32, 8, 8, pyxel.COLOR_BLACK)
+
+
 X_LIST = [
     40 + i * 24
     for i in range(5)
@@ -44,13 +48,16 @@ class App:
         self.height = 200
         self.deck = Deck()
         self.dealt_cards = self.deck.random_pick(5)
-        self.cursor = 1
+        self.cursor = 0
+        self.change = [False for _ in range(5)]
 
     def update(self) -> None:
         if pyxel.btnp(pyxel.KEY_LEFT):
             self.cursor = max(0, self.cursor - 1)
         if pyxel.btnp(pyxel.KEY_RIGHT):
             self.cursor = min(4, self.cursor + 1)
+        if pyxel.btnp(pyxel.KEY_SPACE):
+            self.change[self.cursor] = not self.change[self.cursor]
 
     def draw(self) -> None:
         self._draw_background()
@@ -58,6 +65,8 @@ class App:
 
         for i, card in enumerate(self.dealt_cards):
             draw_card(X_LIST[i], 10, card)
+            if self.change[i]:
+                draw_change_mark(X_LIST[i] + 4, 36)
 
         pyxel.rectb(X_LIST[self.cursor] - 1, 9, 18, 26, pyxel.COLOR_YELLOW)
 
