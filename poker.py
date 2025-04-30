@@ -82,14 +82,33 @@ class _ThreeCards(Hand):
         return cards.count_groups(3 - jokers) >= 1
     
 
+class _FullHouse(Hand):
+    def __init__(self) -> None:
+        super().__init__("フルハウス", "同じ数字のカードの3枚の組と2枚の組が一つずつ")
+
+    def check(self, cards: DealtCards) -> bool:
+        jokers = cards.count_joker()
+        if jokers >= 3:
+            return True
+        if jokers == 2:
+            return cards.count_distinct_numbers() <= 2
+        if jokers == 1:
+            return cards.count_distinct_numbers() == 2
+        else:
+            return cards.count_distinct_numbers() == 2 and cards.count_groups(2) == 2
+
+    
+
 ONE_PAIR = _OnePair()
 TWO_PAIRS = _TwoPairs()
 THREE_CARDS = _ThreeCards()
+FULL_HOUSE = _FullHouse()
 
 HANDS: list[Hand] = [
     ONE_PAIR,
     TWO_PAIRS,
     THREE_CARDS,
+    FULL_HOUSE,
 ]
 
 for _ in range(10):
