@@ -140,6 +140,51 @@ class _Flush(Hand):
         return cards.count_distinct_suits() == 1
     
 
+class _Straight(Hand):
+    def __init__(self) -> None:
+        super().__init__("ストレート", "2からAの中で連続した5つの数字")
+
+    def check(self, cards: DealtCards) -> bool:
+        jokers = cards.count_joker()
+        if jokers >= 4:
+            return True
+        numbers_strength = sorted(map(lambda number: number.strength_A, cards.group_by_number().keys())) # 弱い順
+        diff = numbers_strength[-1] - numbers_strength[0]
+        return diff <= 4 and cards.count_distinct_numbers() == 5 - jokers
+    
+
+class _StraightFlush(Hand):
+    def __init__(self) -> None:
+        super().__init__("ストレートフラッシュ", "フラッシュかつストレート")
+
+    def check(self, cards: DealtCards) -> bool:
+        jokers = cards.count_joker()
+        if jokers >= 4:
+            return True
+        numbers_strength = sorted(map(lambda number: number.strength_A, cards.group_by_number().keys())) # 弱い順
+        diff = numbers_strength[-1] - numbers_strength[0]
+        straight = (diff <= 4 and cards.count_distinct_numbers() == 5 - jokers)
+        flush = (cards.count_distinct_suits() == 1)
+        return straight and flush
+    
+
+class _RoyalFlush(Hand):
+    def __init__(self) -> None:
+        super().__init__("ロイヤルストレートフラッシュ", "数字が10,J,Q,K,Aのストレートフラッシュ")
+
+    def check(self, cards: DealtCards) -> bool:
+        jokers = cards.count_joker()
+        if jokers >= 4:
+            return True
+        numbers_strength = sorted(map(lambda number: number.strength_A, cards.group_by_number().keys())) # 弱い順
+        print(numbers_strength)
+        diff = numbers_strength[-1] - numbers_strength[0]
+        royal = (numbers_strength[0] >= Number.N_10.strength_A and numbers_strength[-1] <= Number.A.strength_A)
+        straight = (diff <= 4 and cards.count_distinct_numbers() == 5 - jokers)
+        flush = (cards.count_distinct_suits() == 1)
+        return royal and straight and flush
+    
+
 ONE_PAIR = _OnePair()
 TWO_PAIRS = _TwoPairs()
 THREE_CARDS = _ThreeCards()
@@ -147,6 +192,9 @@ FULL_HOUSE = _FullHouse()
 FOUR_CARDS = _FourCards()
 FIVE_CARDS = _FiveCards()
 FLUSH = _Flush()
+STRAIGHT = _Straight()
+STRAIGHT_FLUSH = _StraightFlush()
+ROYAL_FLUSH = _RoyalFlush()
 
 HANDS: list[Hand] = [
     ONE_PAIR,
@@ -156,15 +204,7 @@ HANDS: list[Hand] = [
     FOUR_CARDS,
     FIVE_CARDS,
     FLUSH,
+    STRAIGHT,
+    STRAIGHT_FLUSH,
+    ROYAL_FLUSH
 ]
-
-for _ in range(10):
-    d = DealtCards(Deck(jokers=5).random_pick(5))
-    print_card_list(d.cards)
-    for hand in HANDS:
-        print(hand.name, hand.check(d))
-    print("")
-
-
-d = DealtCards([CLUB_10, CLUB_2, CLUB_4, CLUB_6, JOKER])
-print(FLUSH.check(d))
