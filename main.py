@@ -1,5 +1,7 @@
 import pyxel
+from PyxelUniversalFont import Writer
 from card import *
+from poker import *
 
 
 JOKER_POS = (0, 32)
@@ -38,18 +40,23 @@ X_LIST = [
 
 class App:
     def __init__(self) -> None:
-        pyxel.init(200, 200, title="Poker")
+        self.width = 200
+        self.height = 300
+        pyxel.init(self.width, self.height, title="Poker")
         pyxel.load("./resource.pyxres")
         self.initialize()
         pyxel.run(self.update, self.draw)
 
     def initialize(self) -> None:
-        self.width = 200
-        self.height = 200
         self.deck = Deck()
         self.dealt_cards = self.deck.random_pick(5)
         self.cursor = 0
         self.change = [False for _ in range(5)]
+        self.writer = Writer("misaki_gothic.ttf")
+        d = DealtCards(self.dealt_cards)
+        self.hand_check_res = list(
+            map(lambda hand: hand.check(d), HANDS)
+        )
 
     def update(self) -> None:
         if pyxel.btnp(pyxel.KEY_LEFT):
@@ -70,6 +77,11 @@ class App:
             
             self.change = [False for _ in range(5)]
 
+            d = DealtCards(self.dealt_cards)
+            self.hand_check_res = list(
+                map(lambda hand: hand.check(d), HANDS)
+            )
+
     def draw(self) -> None:
         self._draw_background()
         draw_card_back(10, 10)
@@ -79,10 +91,18 @@ class App:
             if self.change[i]:
                 draw_change_mark(X_LIST[i] + 4, 36)
 
+        self._draw_hands()
+
         pyxel.rectb(X_LIST[self.cursor] - 1, 9, 18, 26, pyxel.COLOR_YELLOW)
 
     def _draw_background(self) -> None:
         pyxel.cls(pyxel.COLOR_GREEN)
         pyxel.rectb(1, 1, self.width - 2, self.height - 2, pyxel.COLOR_LIME)
+
+    def _draw_hands(self) -> None:
+        for i, hand in enumerate(HANDS):
+            color = pyxel.COLOR_YELLOW if self.hand_check_res[i] else pyxel.COLOR_BLACK
+            self.writer.draw(10, 50 + i * 24, hand.name, font_color=color, font_size=8)
+            self.writer.draw(10, 60 + i * 24, hand.description, font_color=color, font_size=8)
 
 App()
